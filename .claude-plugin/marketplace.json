@@ -1,0 +1,14 @@
+{
+  "name": "neetorecord",
+  "owner": {
+    "name": "BigBinary",
+    "email": "support@bigbinary.com"
+  },
+  "plugins": [
+    {
+      "name": "neetorecord",
+      "source": "./",
+      "description": "NeetoRecord CLI"
+    }
+  ]
+}
