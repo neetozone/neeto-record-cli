@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/neetozone/neeto-record-cli/internal/output"
 	"github.com/spf13/cobra"
@@ -266,6 +268,33 @@ var recordingsDownloadUrlCmd = &cobra.Command{
 	},
 }
 
+var recordingsScreenshotCmd = &cobra.Command{
+	Use:   "screenshot <id>",
+	Short: "Get a URL to a still-frame screenshot of a recording at a timestamp",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := getClient(cmd)
+		if err != nil {
+			return err
+		}
+
+		timestamp, _ := cmd.Flags().GetFloat64("timestamp")
+		format, _ := cmd.Flags().GetString("format")
+
+		params := url.Values{}
+		params.Set("timestamp", strconv.FormatFloat(timestamp, 'f', -1, 64))
+		params.Set("image_format", format)
+
+		data, err := c.Get(fmt.Sprintf("/recordings/%s/screenshot", args[0]), params)
+		if err != nil {
+			return err
+		}
+
+		printResource(data, nil)
+		return nil
+	},
+}
+
 var recordingsChapterStatusCmd = &cobra.Command{
 	Use:   "chapter-status <id>",
 	Short: "Check chapter generation status for a recording",
@@ -475,6 +504,10 @@ func init() {
 
 	recordingsDownloadUrlCmd.Flags().String("format", "mp4", "Download format: 'mp4' or 'webm'")
 
+	recordingsScreenshotCmd.Flags().Float64("timestamp", 0, "Timestamp in seconds of the frame to capture")
+	recordingsScreenshotCmd.Flags().String("format", "png", "Image format: 'png' or 'jpeg'")
+	_ = recordingsScreenshotCmd.MarkFlagRequired("timestamp")
+
 	recordingsCreateCtaCmd.Flags().String("label", "", "Button label text")
 	recordingsCreateCtaCmd.Flags().Float64("start", 0, "Start time in seconds")
 	recordingsCreateCtaCmd.Flags().Float64("end", 0, "End time in seconds")
@@ -500,6 +533,7 @@ func init() {
 	recordingsCmd.AddCommand(recordingsShareLinkCmd)
 	recordingsCmd.AddCommand(recordingsEmbedCodeCmd)
 	recordingsCmd.AddCommand(recordingsDownloadUrlCmd)
+	recordingsCmd.AddCommand(recordingsScreenshotCmd)
 	recordingsCmd.AddCommand(recordingsChapterStatusCmd)
 	recordingsCmd.AddCommand(recordingsTranscriptStatusCmd)
 	recordingsCmd.AddCommand(recordingsAnalyticsCmd)
