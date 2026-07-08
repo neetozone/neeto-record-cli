@@ -21,19 +21,19 @@ var recordingRequestsCreateCmd = &cobra.Command{
 		title, _ := cmd.Flags().GetString("title")
 		createdByEmail, _ := cmd.Flags().GetString("created-by-email")
 
-		recording := map[string]interface{}{
+		recordingRequest := map[string]interface{}{
 			"title":            title,
 			"created_by_email": createdByEmail,
 		}
 
 		if v, _ := cmd.Flags().GetString("request-instructions"); cmd.Flags().Changed("request-instructions") {
-			recording["request_instructions"] = v
+			recordingRequest["request_instructions"] = v
 		}
 		if v, _ := cmd.Flags().GetString("request-notes"); cmd.Flags().Changed("request-notes") {
-			recording["request_notes"] = v
+			recordingRequest["request_notes"] = v
 		}
 
-		data, err := c.Post("/recording_requests", map[string]interface{}{"recording": recording})
+		data, err := c.Post("/recording_requests", map[string]interface{}{"recording": recordingRequest})
 		if err != nil {
 			return err
 		}
