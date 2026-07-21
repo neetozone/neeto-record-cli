@@ -16,9 +16,12 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "neetorecord",
-	Short:         "NeetoRecord CLI",
-	Long:          "A command-line interface for NeetoRecord.",
+	Use:   "neetorecord",
+	Short: "NeetoRecord CLI",
+	Long:  "A command-line interface for NeetoRecord.",
+	Example: "  $ neetorecord recordings list\n" +
+		"  $ neetorecord recordings show <id>\n" +
+		"  $ neetorecord folders list",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
