@@ -128,6 +128,71 @@ stderr. Common errors the agent should expect:
 
 ## Product-specific commands
 
-This skeleton CLI does not yet ship product-specific resource commands.
-Run `neetorecord commands` to see what is currently available, and
-refer to the CLI's own docs for the full command reference once it grows.
+Every resource below takes the global flags above. Positional `<id>` arguments
+accept either the recording's UUID or its `public_link_id` (the short code in a
+watch URL). Run `neetorecord commands` for the authoritative tree, including any
+flags added after this file was written.
+
+| Resource | Commands |
+|---|---|
+| `recordings` | `list`, `show <id>`, `update <id>`, `delete <id>`, `search`, `search-by-transcript` |
+| `recordings` (transcript) | `transcript <id>`, `transcript-status <id>`, `trigger-transcript <id>` |
+| `recordings` (chapters) | `chapters <id>`, `chapter-status <id>`, `trigger-chapters <id>` |
+| `recordings` (sharing) | `share-link <id>`, `embed-code <id>`, `download-url <id>`, `trigger-mp4 <id>`, `screenshot <id>` |
+| `recordings` (CTAs) | `ctas <id>`, `create-cta <id>` |
+| `recordings` (analytics) | `analytics <id>` |
+| `folders` | `list`, `create` |
+| `tags` | `list` |
+| `team-members` | `list`, `show <id>`, `create`, `update <id>`, `delete <id>` |
+| `recording-requests` | `create` |
+| `analytics` | `show` |
+
+Notes that matter when driving these:
+
+- `recordings update --tag` **replaces** every tag on the recording. To add one
+  without losing the others, run `recordings show <id>` first, read its `tags`
+  array, and pass the existing names plus the new one. Passing only the new tag
+  deletes the rest. Tag names that do not exist yet are created.
+- `recordings update --folder-id ""` removes the recording from its folder.
+  `--folder-id` accepts the id returned by `folders list`.
+- `search` matches titles; `search-by-transcript` matches what was said. Both
+  require `--query` and support pagination.
+- `analytics show` is workspace-wide and takes no id; it accepts optional
+  `--from-date` / `--to-date`. For one recording use `recordings analytics <id>`.
+- `delete` is immediate and irreversible — there is no confirmation prompt, and
+  `recordings delete` takes the transcript, chapters and CTAs with it. Show the
+  user the title and id you are about to delete and get an explicit yes first.
+
+### Waiting for generation
+
+`trigger-transcript`, `trigger-chapters` and `trigger-mp4` return as soon as the
+job is queued, so never treat the response as completion.
+
+Transcripts and chapters have status commands. Poll `transcript-status <id>` or
+`chapter-status <id>` and stop on a terminal state:
+
+| Command | `status` values |
+|---|---|
+| `transcript-status` | `not_applicable`, `unexecuted`, `in_progress`, `failed`, `success` |
+| `chapter-status` | `unexecuted`, `in_progress`, `failed`, `success` |
+
+`success` and `failed` are terminal — stop polling and report a failure rather
+than retrying forever. `in_progress` means keep waiting; `unexecuted` means
+nothing has been triggered yet. These commands also return `has_transcript` /
+`has_chapters`, which is the reliable check for whether content exists.
+
+**There is no `mp4-status` command.** MP4 readiness surfaces through the
+commands that need it: `download-url` returns `is_download_file_ready` and
+`screenshot` returns `is_screenshot_ready`, both `false` while the file is
+stale. Re-running `trigger-mp4` also reports where it stands — `ready` means the
+MP4 is current, `generating` means it was just queued, `already_generating`
+means a conversion is under way. So the loop is: call `download-url` or
+`screenshot`, and if the readiness flag is `false`, run `trigger-mp4` and retry
+until it flips.
+
+- `screenshot` needs `--timestamp` within the recording's duration, and an up to
+  date MP4.
+- `download-url` and `screenshot` return short lived presigned URLs; fetch them
+  immediately before use rather than caching them.
+
+Full reference: https://apidocs.neetorecord.com/cli-reference/overview
