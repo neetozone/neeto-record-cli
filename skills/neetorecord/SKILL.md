@@ -128,6 +128,39 @@ stderr. Common errors the agent should expect:
 
 ## Product-specific commands
 
-This skeleton CLI does not yet ship product-specific resource commands.
-Run `neetorecord commands` to see what is currently available, and
-refer to the CLI's own docs for the full command reference once it grows.
+Every resource below takes the global flags above. Positional `<id>` arguments
+accept either the recording's UUID or its `public_link_id` (the short code in a
+watch URL). Run `neetorecord commands` for the authoritative tree, including any
+flags added after this file was written.
+
+| Resource | Commands |
+|---|---|
+| `recordings` | `list`, `show <id>`, `update <id>`, `delete <id>`, `search`, `search-by-transcript` |
+| `recordings` (transcript) | `transcript <id>`, `transcript-status <id>`, `trigger-transcript <id>` |
+| `recordings` (chapters) | `chapters <id>`, `chapter-status <id>`, `trigger-chapters <id>` |
+| `recordings` (sharing) | `share-link <id>`, `embed-code <id>`, `download-url <id>`, `trigger-mp4 <id>`, `screenshot <id>` |
+| `recordings` (CTAs) | `ctas <id>`, `create-cta <id>` |
+| `recordings` (analytics) | `analytics <id>` |
+| `folders` | `list`, `create` |
+| `tags` | `list` |
+| `team-members` | `list`, `show <id>`, `create`, `update <id>`, `delete <id>` |
+| `recording-requests` | `create` |
+| `analytics` | `show` |
+
+Notes that matter when driving these:
+
+- `recordings update --tag` **replaces** every tag on the recording, so pass the
+  complete set each time. Tag names that do not exist yet are created.
+- `recordings update --folder-id ""` removes the recording from its folder.
+  `--folder-id` accepts the id returned by `folders list`.
+- `search` matches titles; `search-by-transcript` matches what was said. Both
+  require `--query` and support pagination.
+- Generation is asynchronous: `trigger-transcript`, `trigger-chapters` and
+  `trigger-mp4` return immediately, so poll `transcript-status` or
+  `chapter-status` rather than assuming the work is done.
+- `screenshot` needs `--timestamp` within the recording's duration, and an up to
+  date MP4. If it reports the screenshot is not ready, run `trigger-mp4` first.
+- `download-url` and `screenshot` return short lived presigned URLs; fetch them
+  immediately before use rather than caching them.
+
+Full reference: https://apidocs.neetorecord.com/cli-reference/overview
