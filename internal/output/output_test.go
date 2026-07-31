@@ -219,3 +219,26 @@ func TestPickColumns_PrioritisesNeetoRecordFields(t *testing.T) {
 		})
 	}
 }
+
+// created_at and active must hold their columns because they are listed in
+// priorityFields, not because they happen to sort first among the remaining
+// fields. A field that sorts earlier must not displace them.
+func TestPickColumns_PriorityFieldsBeatAlphabeticalFallback(t *testing.T) {
+	recording := map[string]interface{}{
+		"account_id": "", "id": "", "title": "", "duration": 1.0, "view_count": 1.0,
+		"user_name": "", "folder_name": "", "created_at": "", "updated_at": "",
+	}
+	got := pickColumns(recording)
+	if got[len(got)-1] != "created_at" {
+		t.Errorf("created_at was displaced by an alphabetically earlier field: %v", got)
+	}
+
+	teamMember := map[string]interface{}{
+		"access_level": "", "id": "", "email": "", "first_name": "", "last_name": "",
+		"organization_role": "", "time_zone": "", "active": true,
+	}
+	got = pickColumns(teamMember)
+	if got[len(got)-1] != "active" {
+		t.Errorf("active was displaced by an alphabetically earlier field: %v", got)
+	}
+}

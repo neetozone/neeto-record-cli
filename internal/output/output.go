@@ -34,7 +34,7 @@ var priorityFields = []string{
 	"sid", "id", "name", "title", "email", "first_name", "last_name",
 	"status", "kind", "type", "organization_role",
 	"duration", "view_count", "user_name", "folder_name", "recording_count",
-	"time_zone", "date", "day",
+	"time_zone", "active", "created_at", "date", "day",
 }
 
 const (
