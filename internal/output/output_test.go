@@ -162,3 +162,83 @@ func TestPrintWithPagination_JSONEnvelope(t *testing.T) {
 		t.Error("pagination should be present in envelope")
 	}
 }
+
+func TestPickColumns_PrioritisesNeetoRecordFields(t *testing.T) {
+	tests := []struct {
+		name   string
+		sample map[string]interface{}
+		want   []string
+	}{
+		{
+			name: "recordings",
+			sample: map[string]interface{}{
+				"id": "", "title": "", "default_title": "", "duration": 1.0,
+				"view_count": 1.0, "is_uploaded": true, "requested": false,
+				"summary": "", "public_link_id": "", "created_at": "", "updated_at": "",
+				"uploaded_at": "", "public_url": "", "transcoded_url": "",
+				"thumbnail_url": "", "user_name": "", "folder_name": "", "folder_id": "",
+			},
+			want: []string{"id", "title", "duration", "view_count", "user_name", "folder_name", "created_at"},
+		},
+		{
+			name: "team members",
+			sample: map[string]interface{}{
+				"id": "", "email": "", "first_name": "", "last_name": "",
+				"time_zone": "", "profile_image_url": nil, "active": true,
+				"organization_role": "",
+			},
+			want: []string{"id", "email", "first_name", "last_name", "organization_role", "time_zone", "active"},
+		},
+		{
+			name: "folders",
+			sample: map[string]interface{}{
+				"id": "", "name": "", "parent_id": nil, "recording_count": 1.0, "created_at": "",
+			},
+			want: []string{"id", "name", "recording_count", "created_at", "parent_id"},
+		},
+		{
+			name: "tags",
+			sample: map[string]interface{}{
+				"id": "", "name": "", "style": "", "recording_count": 1.0,
+			},
+			want: []string{"id", "name", "recording_count", "style"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := pickColumns(tt.sample)
+			if len(got) != len(tt.want) {
+				t.Fatalf("pickColumns() = %v, want %v", got, tt.want)
+			}
+			for i := range tt.want {
+				if got[i] != tt.want[i] {
+					t.Errorf("pickColumns()[%d] = %q, want %q (full: %v)", i, got[i], tt.want[i], got)
+				}
+			}
+		})
+	}
+}
+
+// created_at and active must hold their columns because they are listed in
+// priorityFields, not because they happen to sort first among the remaining
+// fields. A field that sorts earlier must not displace them.
+func TestPickColumns_PriorityFieldsBeatAlphabeticalFallback(t *testing.T) {
+	recording := map[string]interface{}{
+		"account_id": "", "id": "", "title": "", "duration": 1.0, "view_count": 1.0,
+		"user_name": "", "folder_name": "", "created_at": "", "updated_at": "",
+	}
+	got := pickColumns(recording)
+	if got[len(got)-1] != "created_at" {
+		t.Errorf("created_at was displaced by an alphabetically earlier field: %v", got)
+	}
+
+	teamMember := map[string]interface{}{
+		"access_level": "", "id": "", "email": "", "first_name": "", "last_name": "",
+		"organization_role": "", "time_zone": "", "active": true,
+	}
+	got = pickColumns(teamMember)
+	if got[len(got)-1] != "active" {
+		t.Errorf("active was displaced by an alphabetically earlier field: %v", got)
+	}
+}
