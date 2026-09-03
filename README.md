@@ -110,7 +110,12 @@ VERSION, runs GoReleaser, uploads artifacts to
 neetorecord setup claude      # Register plugin with Claude Code
 neetorecord setup cursor      # Write .cursor/rules/neetorecord.mdc
 neetorecord setup windsurf    # Write .windsurf/rules/neetorecord.md
-neetorecord setup copilot     # Append to .github/copilot-instructions.md
-neetorecord setup gemini      # Append to GEMINI.md
-neetorecord setup codex       # Append to AGENTS.md
+neetorecord setup copilot     # Add a NeetoRecord section to .github/copilot-instructions.md
+neetorecord setup gemini      # Add a NeetoRecord section to GEMINI.md
+neetorecord setup codex       # Add a NeetoRecord section to AGENTS.md
 ```
+
+Every command except `setup claude` writes into the current project directory, so
+run it from the root of the project the assistant works in. Existing content in
+those files is kept. Re-running after an upgrade replaces the NeetoRecord section
+instead of adding a duplicate.
