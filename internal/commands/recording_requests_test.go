@@ -82,16 +82,13 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 
 	t.Setenv("NEETORECORD_BASE_URL", server.URL)
 
-	cmd := newRecordingRequestsCreateTestCommand()
-	if err := cmd.Flags().Set("title", "Q2 Demo Request"); err != nil {
-		t.Fatalf("setting title flag failed: %v", err)
-	}
-	if err := cmd.Flags().Set("created-by-email", "requester@example.com"); err != nil {
-		t.Fatalf("setting created-by-email flag failed: %v", err)
-	}
-
-	if err := cmd.RunE(cmd, nil); err != nil {
-		t.Fatalf("RunE() error = %v", err)
+	testApp.Root().SetArgs([]string{
+		"recording-requests", "create",
+		"--title", "Q2 Demo Request",
+		"--created-by-email", "requester@example.com",
+	})
+	if err := testApp.Root().Execute(); err != nil {
+		t.Fatalf("Execute() error = %v", err)
 	}
 
 	recordingPayload, ok := postedBody["recording"].(map[string]interface{})
@@ -116,18 +113,4 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	if _, ok := recordingPayload["request_notes"]; ok {
 		t.Fatalf("recording.request_notes should be omitted when flag is unset")
 	}
-}
-
-func newRecordingRequestsCreateTestCommand() *cobra.Command {
-	cmd := &cobra.Command{RunE: recordingRequestsCreateCmd.RunE}
-	cmd.Flags().String("title", "", "Title of the requested recording")
-	cmd.Flags().String("created-by-email", "", "Email of the recording requester")
-	cmd.Flags().String(
-		"request-instructions",
-		"",
-		"Instructions shown to the person who will upload the recording",
-	)
-	cmd.Flags().String("request-notes", "", "Private notes for this request")
-	cmd.Flags().String("subdomain", "", "Override saved subdomain")
-	return cmd
 }
