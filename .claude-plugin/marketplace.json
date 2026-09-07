@@ -8,7 +8,7 @@
     {
       "name": "neetorecord",
       "source": "./",
-      "description": "NeetoRecord CLI"
+      "description": "manage recordings, folders and tags from the terminal"
     }
   ]
 }

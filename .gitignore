@@ -1,5 +1,4 @@
 /neetorecord
-/bin/
 *.exe
 dist/
 .DS_Store

@@ -6,12 +6,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/neetozone/neeto-record-cli/internal/auth"
+	"github.com/neetozone/neeto-cli-commons/auth"
+	"github.com/neetozone/neeto-cli-commons/cli"
+	"github.com/neetozone/neeto-cli-commons/config"
+	product "github.com/neetozone/neeto-record-cli"
 	"github.com/spf13/cobra"
 )
 
 func TestRecordingRequestsCreateCommandExists(t *testing.T) {
-	cmd, _, err := rootCmd.Find([]string{"recording-requests", "create"})
+	cmd, _, err := recordingRequestsCmd.Find([]string{"create"})
 	if err != nil {
 		t.Fatalf("recording-requests create command not found: %v", err)
 	}
@@ -36,7 +39,14 @@ func TestRecordingRequestsCreateRequiredFlags(t *testing.T) {
 func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	if err := auth.SaveStore(&auth.Store{Credentials: []auth.Credentials{
+	cfg, err := config.Parse(product.ConfigYAML)
+	if err != nil {
+		t.Fatalf("config.Parse() error = %v", err)
+	}
+	testApp := cli.New(*cfg)
+	Register(testApp)
+
+	if err := testApp.Auth.SaveStore(&auth.Store{Credentials: []auth.Credentials{
 		{
 			Subdomain:    "acme",
 			Email:        "dev@acme.com",

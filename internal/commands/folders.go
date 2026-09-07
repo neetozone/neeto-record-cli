@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/neetozone/neeto-record-cli/internal/output"
+	"github.com/neetozone/neeto-cli-commons/output"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ var foldersCmd = &cobra.Command{
 
 var foldersListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all folders",
+	Short: "List folders",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := getClient(cmd)
 		if err != nil {
@@ -64,5 +64,5 @@ func init() {
 
 	foldersCmd.AddCommand(foldersListCmd)
 	foldersCmd.AddCommand(foldersCreateCmd)
-	rootCmd.AddCommand(foldersCmd)
+	register(func(root *cobra.Command) { root.AddCommand(foldersCmd) })
 }

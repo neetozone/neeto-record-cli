@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/neetozone/neeto-record-cli/internal/output"
+	"github.com/neetozone/neeto-cli-commons/output"
 	"github.com/spf13/cobra"
 )
 
@@ -103,7 +103,7 @@ var recordingsDeleteCmd = &cobra.Command{
 			return err
 		}
 
-		output.PrintMessage("Recording deleted.")
+		printMessage("Recording deleted.")
 		return nil
 	},
 }
@@ -542,5 +542,5 @@ func init() {
 	recordingsCmd.AddCommand(recordingsTriggerTranscriptCmd)
 	recordingsCmd.AddCommand(recordingsTriggerChaptersCmd)
 	recordingsCmd.AddCommand(recordingsTriggerMp4Cmd)
-	rootCmd.AddCommand(recordingsCmd)
+	register(func(root *cobra.Command) { root.AddCommand(recordingsCmd) })
 }

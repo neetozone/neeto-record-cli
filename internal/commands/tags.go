@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/neetozone/neeto-record-cli/internal/output"
+	"github.com/neetozone/neeto-cli-commons/output"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ var tagsCmd = &cobra.Command{
 
 var tagsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all tags",
+	Short: "List tags",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := getClient(cmd)
 		if err != nil {
@@ -33,5 +33,5 @@ func init() {
 	addPaginationFlags(tagsListCmd)
 
 	tagsCmd.AddCommand(tagsListCmd)
-	rootCmd.AddCommand(tagsCmd)
+	register(func(root *cobra.Command) { root.AddCommand(tagsCmd) })
 }
