@@ -1,6 +1,6 @@
 {
   "name": "neetorecord",
-  "description": "NeetoRecord CLI",
+  "description": "manage recordings, folders and tags from the terminal",
   "author": {
     "name": "BigBinary",
     "email": "support@bigbinary.com"

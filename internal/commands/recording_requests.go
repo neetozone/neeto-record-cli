@@ -56,5 +56,5 @@ func init() {
 	_ = recordingRequestsCreateCmd.MarkFlagRequired("created-by-email")
 
 	recordingRequestsCmd.AddCommand(recordingRequestsCreateCmd)
-	rootCmd.AddCommand(recordingRequestsCmd)
+	register(func(root *cobra.Command) { root.AddCommand(recordingRequestsCmd) })
 }

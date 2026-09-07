@@ -43,5 +43,5 @@ func init() {
 	analyticsShowCmd.Flags().String("to-date", "", "End date filter (ISO format, e.g. '2024-12-31')")
 
 	analyticsCmd.AddCommand(analyticsShowCmd)
-	rootCmd.AddCommand(analyticsCmd)
+	register(func(root *cobra.Command) { root.AddCommand(analyticsCmd) })
 }

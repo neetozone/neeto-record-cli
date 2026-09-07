@@ -6,12 +6,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/neetozone/neeto-record-cli/internal/auth"
+	"github.com/neetozone/neeto-cli-commons/auth"
+	"github.com/neetozone/neeto-cli-commons/cli"
+	"github.com/neetozone/neeto-cli-commons/config"
+	product "github.com/neetozone/neeto-record-cli"
 	"github.com/spf13/cobra"
 )
 
 func TestRecordingRequestsCreateCommandExists(t *testing.T) {
-	cmd, _, err := rootCmd.Find([]string{"recording-requests", "create"})
+	cmd, _, err := recordingRequestsCmd.Find([]string{"create"})
 	if err != nil {
 		t.Fatalf("recording-requests create command not found: %v", err)
 	}
@@ -36,7 +39,14 @@ func TestRecordingRequestsCreateRequiredFlags(t *testing.T) {
 func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	if err := auth.SaveStore(&auth.Store{Credentials: []auth.Credentials{
+	cfg, err := config.Parse(product.ConfigYAML)
+	if err != nil {
+		t.Fatalf("config.Parse() error = %v", err)
+	}
+	testApp := cli.New(*cfg)
+	Register(testApp)
+
+	if err := testApp.Auth.SaveStore(&auth.Store{Credentials: []auth.Credentials{
 		{
 			Subdomain:    "acme",
 			Email:        "dev@acme.com",
@@ -72,16 +82,13 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 
 	t.Setenv("NEETORECORD_BASE_URL", server.URL)
 
-	cmd := newRecordingRequestsCreateTestCommand()
-	if err := cmd.Flags().Set("title", "Q2 Demo Request"); err != nil {
-		t.Fatalf("setting title flag failed: %v", err)
-	}
-	if err := cmd.Flags().Set("created-by-email", "requester@example.com"); err != nil {
-		t.Fatalf("setting created-by-email flag failed: %v", err)
-	}
-
-	if err := cmd.RunE(cmd, nil); err != nil {
-		t.Fatalf("RunE() error = %v", err)
+	testApp.Root().SetArgs([]string{
+		"recording-requests", "create",
+		"--title", "Q2 Demo Request",
+		"--created-by-email", "requester@example.com",
+	})
+	if err := testApp.Root().Execute(); err != nil {
+		t.Fatalf("Execute() error = %v", err)
 	}
 
 	recordingPayload, ok := postedBody["recording"].(map[string]interface{})
@@ -106,18 +113,4 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	if _, ok := recordingPayload["request_notes"]; ok {
 		t.Fatalf("recording.request_notes should be omitted when flag is unset")
 	}
-}
-
-func newRecordingRequestsCreateTestCommand() *cobra.Command {
-	cmd := &cobra.Command{RunE: recordingRequestsCreateCmd.RunE}
-	cmd.Flags().String("title", "", "Title of the requested recording")
-	cmd.Flags().String("created-by-email", "", "Email of the recording requester")
-	cmd.Flags().String(
-		"request-instructions",
-		"",
-		"Instructions shown to the person who will upload the recording",
-	)
-	cmd.Flags().String("request-notes", "", "Private notes for this request")
-	cmd.Flags().String("subdomain", "", "Override saved subdomain")
-	return cmd
 }
