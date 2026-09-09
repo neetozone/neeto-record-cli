@@ -2,6 +2,7 @@ pretty_name: NeetoRecord
 binary_name: neetorecord
 short_description: manage recordings, folders and tags from the terminal
 long_description: A command-line interface for NeetoRecord. Manage recordings, folders and tags, and pull analytics.
+docs_url: https://apidocs.neetorecord.com/cli/introduction
 api_base_path: /api/external/v2
 root_examples:
   - neetorecord recordings list
