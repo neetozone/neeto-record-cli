@@ -9,4 +9,4 @@ root_examples:
   - neetorecord recordings show <id>
   - neetorecord folders list
 priority_fields: [name, title, email, first_name, last_name, status, kind, type, organization_role, duration, view_count, user_name, folder_name, recording_count, time_zone, active, created_at, date, day]
-commons_version: v1.0.5
+commons_version: v1.0.6
