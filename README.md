@@ -122,6 +122,7 @@ Every command accepts:
 | `--json` | Force JSON envelope output. |
 | `--quiet` | Emit raw data only. Action commands print just the identifier; `delete` prints `success`. |
 | `--toon` | TOON (Token-Optimized Output Notation) — compact format for LLMs. |
+| `--verbose` | Expand every field of a record instead of a table. |
 <!-- neeto-cli-commons:global-flags:end -->
 
 ## Adding product-specific commands
@@ -135,11 +136,13 @@ Quick API wrapper reference: [`docs/api-wrapper-reference.md`](docs/api-wrapper-
 <!-- neeto-cli-commons:release:start -->
 ## Release
 
-Releases are cut by BigBinary's CI pipeline defined in
-`.neetoci/release.yml`. Merging a PR with a `major` / `minor` / `patch`
-label to `main` triggers the shared release script published by
-`neeto-cli-commons`, which bumps and tags VERSION, runs GoReleaser,
-uploads artifacts to `s3://neeto-downloads/cli/NeetoRecord/`, updates the
-Homebrew tap (`neetozone/tap`), and pushes the version bump commit
-straight to `main`.
+Releases are cut by the CI pipeline defined in `.neetoci/release.yml`.
+
+Merging a PR with a `major`, `minor`, or `patch` label to `main` triggers the shared release script from `neeto-cli-commons`. The script:
+
+* Bumps and tags `VERSION`
+* Runs GoReleaser
+* Uploads artifacts to `s3://neeto-downloads/cli/NeetoRecord/`
+* Updates the Homebrew tap (`neetozone/tap`)
+* Pushes the version bump commit to `main`
 <!-- neeto-cli-commons:release:end -->
