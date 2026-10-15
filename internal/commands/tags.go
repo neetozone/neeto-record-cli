@@ -19,7 +19,10 @@ var tagsListCmd = &cobra.Command{
 			return err
 		}
 
-		data, err := c.Get("/tags", paginationParams(cmd))
+		params := paginationParams(cmd)
+		setChangedFlags(cmd, params, "sort-by", "sort-direction")
+
+		data, err := c.Get("/tags", params)
 		if err != nil {
 			return err
 		}
@@ -31,6 +34,7 @@ var tagsListCmd = &cobra.Command{
 
 func init() {
 	addPaginationFlags(tagsListCmd)
+	addSortFlags(tagsListCmd, "created_at or name")
 
 	tagsCmd.AddCommand(tagsListCmd)
 	register(func(root *cobra.Command) { root.AddCommand(tagsCmd) })

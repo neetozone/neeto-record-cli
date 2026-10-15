@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"net/url"
+	"strings"
 
 	"github.com/neetozone/neeto-cli-commons/cli"
 	"github.com/neetozone/neeto-cli-commons/client"
@@ -45,3 +46,16 @@ func paginationParams(cmd *cobra.Command) url.Values { return app.PaginationPara
 func addPaginationFlags(cmd *cobra.Command) { cli.AddPaginationFlags(0, cmd) }
 
 func printMessage(msg string) { app.PrintMessage(msg) }
+
+func addSortFlags(cmd *cobra.Command, columns string) {
+	cmd.Flags().String("sort-by", "", "Sort by "+columns)
+	cmd.Flags().String("sort-direction", "", "Sort direction: asc or desc")
+}
+
+func setChangedFlags(cmd *cobra.Command, params url.Values, names ...string) {
+	for _, name := range names {
+		if v, _ := cmd.Flags().GetString(name); cmd.Flags().Changed(name) {
+			params.Set(strings.ReplaceAll(name, "-", "_"), v)
+		}
+	}
+}

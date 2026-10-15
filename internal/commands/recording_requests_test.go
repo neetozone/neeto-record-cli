@@ -25,7 +25,7 @@ func TestRecordingRequestsCreateCommandExists(t *testing.T) {
 }
 
 func TestRecordingRequestsCreateRequiredFlags(t *testing.T) {
-	for _, name := range []string{"title", "created-by-email"} {
+	for _, name := range []string{"title"} {
 		flag := recordingRequestsCreateCmd.Flag(name)
 		if flag == nil {
 			t.Fatalf("flag %q not found", name)
@@ -112,5 +112,21 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	}
 	if _, ok := recordingPayload["request_notes"]; ok {
 		t.Fatalf("recording.request_notes should be omitted when flag is unset")
+	}
+}
+
+func TestRecordingRequestsCreateOmitsCreatedByEmailWhenUnset(t *testing.T) {
+	req := runCommand(t, `{"recording_request":{"id":"rq_123"}}`,
+		"recording-requests", "create", "--title", "Q2 Demo Request")
+
+	if req.method != http.MethodPost || req.path != "/api/external/v2/recording_requests" {
+		t.Fatalf("request = %s %s", req.method, req.path)
+	}
+	var body map[string]map[string]interface{}
+	if err := json.Unmarshal([]byte(req.body), &body); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	if _, ok := body["recording"]["created_by_email"]; ok {
+		t.Fatalf("created_by_email should be omitted when the flag is unset")
 	}
 }

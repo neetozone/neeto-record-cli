@@ -141,6 +141,7 @@ flags added after this file was written.
 | `recordings` (sharing) | `share-link <id>`, `embed-code <id>`, `download-url <id>`, `trigger-mp4 <id>`, `screenshot <id>` |
 | `recordings` (CTAs) | `ctas <id>`, `create-cta <id>` |
 | `recordings` (analytics) | `analytics <id>` |
+| `recordings` (action items) | `action-items <id>`, `trigger-action-items <id>` |
 | `folders` | `list`, `create` |
 | `tags` | `list` |
 | `team-members` | `list`, `show <id>`, `create`, `update <id>`, `delete <id>` |
@@ -157,6 +158,21 @@ Notes that matter when driving these:
   `--folder-id` accepts the id returned by `folders list`.
 - `search` matches titles; `search-by-transcript` matches what was said. Both
   require `--query` and support pagination.
+- `recordings list` takes `--owner-email` (`me` for yourself),
+  `--from-date`/`--to-date` (created date, `YYYY-MM-DD` or `YYYY-MM`, inclusive),
+  `--folder-id`, repeatable `--tag` (any of), `--title`, `--has-transcript` /
+  `--has-transcript=false`, `--requested-only`, `--sort-by
+  created_at|title|duration|view_count`, `--sort-direction asc|desc`. Only
+  uploaded recordings are listed unless `--requested-only` is set. Rows carry
+  `has_transcript`.
+- `folders list` and `tags list` take `--sort-by created_at|name` and
+  `--sort-direction`. `recordings ctas <id>` takes pagination flags,
+  `--sort-by created_at|start|label` and `--sort-direction`.
+- Lists, folder and tag counts and `analytics show` cover only the recordings
+  you can see; members without the view-all-recordings permission see their own.
+- `recording-requests create` makes the request yours unless
+  `--created-by-email` names another member, which needs the
+  manage-all-recordings permission.
 - `analytics show` is workspace-wide and takes no id; it accepts optional
   `--from-date` / `--to-date`. For one recording use `recordings analytics <id>`.
 - `delete` is immediate and irreversible — there is no confirmation prompt, and
@@ -165,7 +181,7 @@ Notes that matter when driving these:
 
 ### Waiting for generation
 
-`trigger-transcript`, `trigger-chapters` and `trigger-mp4` return as soon as the
+`trigger-transcript`, `trigger-chapters`, `trigger-mp4` and `trigger-action-items` return as soon as the
 job is queued, so never treat the response as completion.
 
 Transcripts and chapters have status commands. Poll `transcript-status <id>` or
@@ -175,11 +191,15 @@ Transcripts and chapters have status commands. Poll `transcript-status <id>` or
 |---|---|
 | `transcript-status` | `not_applicable`, `unexecuted`, `in_progress`, `failed`, `success` |
 | `chapter-status` | `unexecuted`, `in_progress`, `failed`, `success` |
+| `action-items` | `success`, `no_transcript`, `in_progress`, `failed`, `not_generated` |
 
 `success` and `failed` are terminal — stop polling and report a failure rather
 than retrying forever. `in_progress` means keep waiting; `unexecuted` means
 nothing has been triggered yet. These commands also return `has_transcript` /
 `has_chapters`, which is the reliable check for whether content exists.
+
+`trigger-action-items` returns immediately, so poll `action-items <id>` until
+the status is `success` or `failed`.
 
 **There is no `mp4-status` command.** MP4 readiness surfaces through the
 commands that need it: `download-url` returns `is_download_file_ready` and

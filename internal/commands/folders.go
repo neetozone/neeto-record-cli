@@ -19,7 +19,10 @@ var foldersListCmd = &cobra.Command{
 			return err
 		}
 
-		data, err := c.Get("/folders", paginationParams(cmd))
+		params := paginationParams(cmd)
+		setChangedFlags(cmd, params, "sort-by", "sort-direction")
+
+		data, err := c.Get("/folders", params)
 		if err != nil {
 			return err
 		}
@@ -57,6 +60,7 @@ var foldersCreateCmd = &cobra.Command{
 
 func init() {
 	addPaginationFlags(foldersListCmd)
+	addSortFlags(foldersListCmd, "created_at or name")
 
 	foldersCreateCmd.Flags().String("name", "", "Folder name")
 	foldersCreateCmd.Flags().String("parent-folder-id", "", "Parent folder ID (for nested folders)")
