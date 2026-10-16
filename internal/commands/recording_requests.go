@@ -19,11 +19,11 @@ var recordingRequestsCreateCmd = &cobra.Command{
 		}
 
 		title, _ := cmd.Flags().GetString("title")
-		createdByEmail, _ := cmd.Flags().GetString("created-by-email")
 
-		recordingRequest := map[string]interface{}{
-			"title":            title,
-			"created_by_email": createdByEmail,
+		recordingRequest := map[string]interface{}{"title": title}
+
+		if v, _ := cmd.Flags().GetString("created-by-email"); cmd.Flags().Changed("created-by-email") {
+			recordingRequest["created_by_email"] = v
 		}
 
 		if v, _ := cmd.Flags().GetString("request-instructions"); cmd.Flags().Changed("request-instructions") {
@@ -45,7 +45,7 @@ var recordingRequestsCreateCmd = &cobra.Command{
 
 func init() {
 	recordingRequestsCreateCmd.Flags().String("title", "", "Title of the requested recording")
-	recordingRequestsCreateCmd.Flags().String("created-by-email", "", "Email of the recording requester")
+	recordingRequestsCreateCmd.Flags().String("created-by-email", "", "Email of the member who owns the request (defaults to the signed-in member)")
 	recordingRequestsCreateCmd.Flags().String(
 		"request-instructions",
 		"",
@@ -53,7 +53,6 @@ func init() {
 	)
 	recordingRequestsCreateCmd.Flags().String("request-notes", "", "Private notes for this request")
 	_ = recordingRequestsCreateCmd.MarkFlagRequired("title")
-	_ = recordingRequestsCreateCmd.MarkFlagRequired("created-by-email")
 
 	recordingRequestsCmd.AddCommand(recordingRequestsCreateCmd)
 	register(func(root *cobra.Command) { root.AddCommand(recordingRequestsCmd) })

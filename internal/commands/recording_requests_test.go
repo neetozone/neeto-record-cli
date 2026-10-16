@@ -10,7 +10,6 @@ import (
 	"github.com/neetozone/neeto-cli-commons/cli"
 	"github.com/neetozone/neeto-cli-commons/config"
 	product "github.com/neetozone/neeto-record-cli"
-	"github.com/spf13/cobra"
 )
 
 func TestRecordingRequestsCreateCommandExists(t *testing.T) {
@@ -21,18 +20,6 @@ func TestRecordingRequestsCreateCommandExists(t *testing.T) {
 
 	if cmd.Use != "create" {
 		t.Fatalf("unexpected command use: %q", cmd.Use)
-	}
-}
-
-func TestRecordingRequestsCreateRequiredFlags(t *testing.T) {
-	for _, name := range []string{"title", "created-by-email"} {
-		flag := recordingRequestsCreateCmd.Flag(name)
-		if flag == nil {
-			t.Fatalf("flag %q not found", name)
-		}
-		if _, ok := flag.Annotations[cobra.BashCompOneRequiredFlag]; !ok {
-			t.Fatalf("flag %q is not marked as required", name)
-		}
 	}
 }
 
@@ -112,5 +99,21 @@ func TestRecordingRequestsCreatePayloadOmitsUnsetOptionals(t *testing.T) {
 	}
 	if _, ok := recordingPayload["request_notes"]; ok {
 		t.Fatalf("recording.request_notes should be omitted when flag is unset")
+	}
+}
+
+func TestRecordingRequestsCreateOmitsCreatedByEmailWhenUnset(t *testing.T) {
+	req := runCommand(t, `{"recording_request":{"id":"rq_123"}}`,
+		"recording-requests", "create", "--title", "Q2 Demo Request")
+
+	if req.method != http.MethodPost || req.path != "/api/external/v2/recording_requests" {
+		t.Fatalf("request = %s %s", req.method, req.path)
+	}
+	var body map[string]map[string]interface{}
+	if err := json.Unmarshal([]byte(req.body), &body); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	if _, ok := body["recording"]["created_by_email"]; ok {
+		t.Fatalf("created_by_email should be omitted when the flag is unset")
 	}
 }

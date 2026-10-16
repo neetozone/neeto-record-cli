@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/neetozone/neeto-cli-commons/output"
 	"github.com/spf13/cobra"
@@ -23,7 +24,18 @@ var recordingsListCmd = &cobra.Command{
 			return err
 		}
 
-		data, err := c.Get("/recordings", paginationParams(cmd))
+		params := paginationParams(cmd)
+		setChangedFlags(cmd, params, "owner-email", "from-date", "to-date", "folder-id", "title", "sort-by", "sort-direction")
+		for _, tag := range mustStringArray(cmd, "tag") {
+			params.Add("tag_names[]", tag)
+		}
+		for _, name := range []string{"has-transcript", "requested-only"} {
+			if v, _ := cmd.Flags().GetBool(name); cmd.Flags().Changed(name) {
+				params.Set(strings.ReplaceAll(name, "-", "_"), strconv.FormatBool(v))
+			}
+		}
+
+		data, err := c.Get("/recordings", params)
 		if err != nil {
 			return err
 		}
@@ -365,12 +377,15 @@ var recordingsCtasCmd = &cobra.Command{
 			return err
 		}
 
-		data, err := c.Get(fmt.Sprintf("/recordings/%s/ctas", args[0]), nil)
+		params := paginationParams(cmd)
+		setChangedFlags(cmd, params, "sort-by", "sort-direction")
+
+		data, err := c.Get(fmt.Sprintf("/recordings/%s/ctas", args[0]), params)
 		if err != nil {
 			return err
 		}
 
-		printResource(data, nil)
+		printList(data, "ctas", nil)
 		return nil
 	},
 }
@@ -486,8 +501,67 @@ var recordingsTriggerMp4Cmd = &cobra.Command{
 	},
 }
 
+var recordingsActionItemsCmd = &cobra.Command{
+	Use:   "action-items <id>",
+	Short: "Get the action items extracted from a recording",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := getClient(cmd)
+		if err != nil {
+			return err
+		}
+
+		data, err := c.Get(fmt.Sprintf("/recordings/%s/action-items", args[0]), nil)
+		if err != nil {
+			return err
+		}
+
+		printResource(data, []output.Breadcrumb{
+			{Label: "Trigger", Command: "neetorecord recordings trigger-action-items <id>"},
+		})
+		return nil
+	},
+}
+
+var recordingsTriggerActionItemsCmd = &cobra.Command{
+	Use:   "trigger-action-items <id>",
+	Short: "Start action item extraction for a recording",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := getClient(cmd)
+		if err != nil {
+			return err
+		}
+
+		data, err := c.Post(fmt.Sprintf("/recordings/%s/trigger-action-items", args[0]), nil)
+		if err != nil {
+			return err
+		}
+
+		printActionResult(data, nil)
+		return nil
+	},
+}
+
+func mustStringArray(cmd *cobra.Command, name string) []string {
+	v, _ := cmd.Flags().GetStringArray(name)
+	return v
+}
+
 func init() {
 	addPaginationFlags(recordingsListCmd)
+	recordingsListCmd.Flags().String("owner-email", "", "Only recordings owned by this email, or 'me'")
+	recordingsListCmd.Flags().String("from-date", "", "Created on or after (YYYY-MM-DD or YYYY-MM)")
+	recordingsListCmd.Flags().String("to-date", "", "Created on or before (YYYY-MM-DD or YYYY-MM)")
+	recordingsListCmd.Flags().String("folder-id", "", "Only recordings in this folder")
+	recordingsListCmd.Flags().StringArray("tag", nil, "Tag name (repeatable; matches any)")
+	recordingsListCmd.Flags().String("title", "", "Partial title match")
+	recordingsListCmd.Flags().Bool("has-transcript", false, "Only recordings with a transcript (use =false for those without)")
+	recordingsListCmd.Flags().Bool("requested-only", false, "Only recording requests")
+	addSortFlags(recordingsListCmd, "created_at, title, duration or view_count")
+
+	addPaginationFlags(recordingsCtasCmd)
+	addSortFlags(recordingsCtasCmd, "created_at, start or label")
 
 	recordingsUpdateCmd.Flags().String("title", "", "New title")
 	recordingsUpdateCmd.Flags().String("summary", "", "New summary")
@@ -542,5 +616,7 @@ func init() {
 	recordingsCmd.AddCommand(recordingsTriggerTranscriptCmd)
 	recordingsCmd.AddCommand(recordingsTriggerChaptersCmd)
 	recordingsCmd.AddCommand(recordingsTriggerMp4Cmd)
+	recordingsCmd.AddCommand(recordingsActionItemsCmd)
+	recordingsCmd.AddCommand(recordingsTriggerActionItemsCmd)
 	register(func(root *cobra.Command) { root.AddCommand(recordingsCmd) })
 }
