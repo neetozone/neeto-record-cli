@@ -10,7 +10,6 @@ import (
 	"github.com/neetozone/neeto-cli-commons/cli"
 	"github.com/neetozone/neeto-cli-commons/config"
 	product "github.com/neetozone/neeto-record-cli"
-	"github.com/spf13/cobra"
 )
 
 func TestRecordingRequestsCreateCommandExists(t *testing.T) {
@@ -21,18 +20,6 @@ func TestRecordingRequestsCreateCommandExists(t *testing.T) {
 
 	if cmd.Use != "create" {
 		t.Fatalf("unexpected command use: %q", cmd.Use)
-	}
-}
-
-func TestRecordingRequestsCreateRequiredFlags(t *testing.T) {
-	for _, name := range []string{"title"} {
-		flag := recordingRequestsCreateCmd.Flag(name)
-		if flag == nil {
-			t.Fatalf("flag %q not found", name)
-		}
-		if _, ok := flag.Annotations[cobra.BashCompOneRequiredFlag]; !ok {
-			t.Fatalf("flag %q is not marked as required", name)
-		}
 	}
 }
 

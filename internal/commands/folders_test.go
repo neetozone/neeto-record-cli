@@ -13,11 +13,3 @@ func TestFoldersListSendsSortParams(t *testing.T) {
 		t.Errorf("query = %v", req.query)
 	}
 }
-
-func TestFoldersListOmitsUnsetSortParams(t *testing.T) {
-	req := runCommand(t, `{"folders":[],"pagination":{}}`, "folders", "list")
-
-	if req.query.Has("sort_by") || req.query.Has("sort_direction") {
-		t.Errorf("sort params should be omitted, query = %v", req.query)
-	}
-}

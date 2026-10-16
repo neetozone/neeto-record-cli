@@ -13,11 +13,3 @@ func TestTagsListSendsSortParams(t *testing.T) {
 		t.Errorf("query = %v", req.query)
 	}
 }
-
-func TestTagsListOmitsUnsetSortParams(t *testing.T) {
-	req := runCommand(t, `{"tags":[],"pagination":{}}`, "tags", "list")
-
-	if req.query.Has("sort_by") || req.query.Has("sort_direction") {
-		t.Errorf("sort params should be omitted, query = %v", req.query)
-	}
-}

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 
 	"github.com/neetozone/neeto-cli-commons/auth"
@@ -87,41 +88,31 @@ func TestRecordingsListSendsFilters(t *testing.T) {
 		"--sort-direction", "asc",
 	)
 
+	want := url.Values{
+		"owner_email":    {"me"},
+		"from_date":      {"2026-10-01"},
+		"to_date":        {"2026-10"},
+		"folder_id":      {"fld_1"},
+		"tag_names[]":    {"demo", "sales"},
+		"title":          {"onboarding"},
+		"has_transcript": {"false"},
+		"requested_only": {"true"},
+		"sort_by":        {"duration"},
+		"sort_direction": {"asc"},
+	}
 	if req.method != http.MethodGet || req.path != "/api/external/v2/recordings" {
 		t.Fatalf("request = %s %s", req.method, req.path)
 	}
-	want := map[string]string{
-		"owner_email":    "me",
-		"from_date":      "2026-10-01",
-		"to_date":        "2026-10",
-		"folder_id":      "fld_1",
-		"title":          "onboarding",
-		"has_transcript": "false",
-		"requested_only": "true",
-		"sort_by":        "duration",
-		"sort_direction": "asc",
-	}
-	for key, value := range want {
-		if got := req.query.Get(key); got != value {
-			t.Errorf("%s = %q, want %q", key, got, value)
-		}
-	}
-	tags := req.query["tag_names[]"]
-	if len(tags) != 2 || tags[0] != "demo" || tags[1] != "sales" {
-		t.Errorf("tag_names[] = %v, want [demo sales]", tags)
+	if !reflect.DeepEqual(req.query, want) {
+		t.Errorf("query = %v, want %v", req.query, want)
 	}
 }
 
-func TestRecordingsListOmitsUnsetFilters(t *testing.T) {
+func TestRecordingsListSendsNoFilterParamsWhenFlagsUnset(t *testing.T) {
 	req := runCommand(t, `{"recordings":[],"pagination":{}}`, "recordings", "list")
 
-	for _, key := range []string{
-		"owner_email", "from_date", "to_date", "folder_id", "title",
-		"has_transcript", "requested_only", "sort_by", "sort_direction", "tag_names[]",
-	} {
-		if _, ok := req.query[key]; ok {
-			t.Errorf("%s should be omitted when its flag is unset", key)
-		}
+	if len(req.query) != 0 {
+		t.Errorf("query = %v, want empty", req.query)
 	}
 }
 
@@ -156,12 +147,16 @@ func TestRecordingsCtasSendsSortAndPagination(t *testing.T) {
 		"recordings", "ctas", "abc",
 		"--page", "2", "--page-size", "10", "--sort-by", "label", "--sort-direction", "asc")
 
+	want := url.Values{
+		"page":           {"2"},
+		"page_size":      {"10"},
+		"sort_by":        {"label"},
+		"sort_direction": {"asc"},
+	}
 	if req.path != "/api/external/v2/recordings/abc/ctas" {
 		t.Fatalf("path = %s", req.path)
 	}
-	for key, value := range map[string]string{"sort_by": "label", "sort_direction": "asc", "page_size": "10"} {
-		if got := req.query.Get(key); got != value {
-			t.Errorf("%s = %q, want %q", key, got, value)
-		}
+	if !reflect.DeepEqual(req.query, want) {
+		t.Errorf("query = %v, want %v", req.query, want)
 	}
 }
