@@ -149,6 +149,7 @@ func TestRecordingsCtasSendsSortAndPagination(t *testing.T) {
 
 	want := url.Values{
 		"page":           {"2"},
+		"page_number":    {"2"},
 		"page_size":      {"10"},
 		"sort_by":        {"label"},
 		"sort_direction": {"asc"},
