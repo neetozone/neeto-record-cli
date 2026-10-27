@@ -142,6 +142,7 @@ flags added after this file was written.
 | `recordings` (CTAs) | `ctas <id>`, `create-cta <id>` |
 | `recordings` (analytics) | `analytics <id>` |
 | `recordings` (action items) | `action-items <id>`, `trigger-action-items <id>` |
+| `recordings` (upload) | `upload <file.mp4> [--title] [--folder-id]` |
 | `folders` | `list`, `create` |
 | `tags` | `list` |
 | `team-members` | `list`, `show <id>`, `create`, `update <id>`, `delete <id>` |
@@ -150,6 +151,7 @@ flags added after this file was written.
 
 Notes that matter when driving these:
 
+- `recordings upload` takes an `.mp4` up to 2 GB, e.g. `neetorecord recordings upload demo.mp4 --title "Demo" --json`; the recording's `url` is the watch link.
 - `recordings update --tag` **replaces** every tag on the recording. To add one
   without losing the others, run `recordings show <id>` first, read its `tags`
   array, and pass the existing names plus the new one. Passing only the new tag
