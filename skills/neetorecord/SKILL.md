@@ -151,7 +151,7 @@ flags added after this file was written.
 
 Notes that matter when driving these:
 
-- `recordings upload` takes an `.mp4` up to 2 GB, e.g. `neetorecord recordings upload demo.mp4 --title "Demo" --json`; the recording's `url` is the watch link.
+- `recordings upload` takes an `.mp4` up to 2 GB, e.g. `neetorecord recordings upload demo.mp4 --title "Demo" --folder-id <id> --json`; the recording's `url` is the watch link.
 - `recordings update --tag` **replaces** every tag on the recording. To add one
   without losing the others, run `recordings show <id>` first, read its `tags`
   array, and pass the existing names plus the new one. Passing only the new tag

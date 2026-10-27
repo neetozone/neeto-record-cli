@@ -154,6 +154,32 @@ func TestRecordingsUploadRetriesAServerErrorFromStorage(t *testing.T) {
 	}
 }
 
+func TestRecordingsUploadRetriesWhenStorageSaysTooManyRequests(t *testing.T) {
+	puts := 0
+	storage := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		puts++
+		if puts == 1 {
+			w.WriteHeader(http.StatusTooManyRequests)
+		}
+	}))
+	defer storage.Close()
+
+	api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/uploads") {
+			_, _ = fmt.Fprintf(w, `{"recording":{"id":"rec_1"},"upload_url":%q,"upload_headers":{}}`, storage.URL)
+			return
+		}
+		_, _ = w.Write([]byte(`{"recording":{"id":"rec_1"}}`))
+	})
+
+	if _, err := runUploadCommand(t, api, "recordings", "upload", writeFile(t, "demo.mp4", "x"), "--quiet"); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if puts != 2 {
+		t.Errorf("PUT attempts = %d, want 2", puts)
+	}
+}
+
 func TestRecordingsUploadDoesNotRetryAClientErrorFromStorage(t *testing.T) {
 	puts := 0
 	storage := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

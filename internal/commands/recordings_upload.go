@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +19,13 @@ const (
 	maxUploadSize  = 2 << 30
 	uploadAttempts = 3
 )
+
+var uploadClient = &http.Client{Transport: &http.Transport{
+	Proxy:                 http.ProxyFromEnvironment,
+	DialContext:           (&net.Dialer{Timeout: 30 * time.Second}).DialContext,
+	TLSHandshakeTimeout:   30 * time.Second,
+	ResponseHeaderTimeout: 2 * time.Minute,
+}}
 
 var recordingsUploadCmd = &cobra.Command{
 	Use:   "upload <file.mp4>",
@@ -71,7 +80,7 @@ var recordingsUploadCmd = &cobra.Command{
 			defer spinner.Stop()
 		}
 
-		if err := putFile(path, info.Size(), created.UploadURL, created.UploadHeaders); err != nil {
+		if err := putFile(cmd.Context(), path, info.Size(), created.UploadURL, created.UploadHeaders); err != nil {
 			return err
 		}
 
@@ -87,13 +96,13 @@ var recordingsUploadCmd = &cobra.Command{
 	},
 }
 
-func putFile(path string, size int64, uploadURL string, headers map[string]string) error {
+func putFile(ctx context.Context, path string, size int64, uploadURL string, headers map[string]string) error {
 	var lastErr error
 	for attempt := 0; attempt < uploadAttempts; attempt++ {
 		if attempt > 0 {
 			time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
 		}
-		retry, err := putFileOnce(path, size, uploadURL, headers)
+		retry, err := putFileOnce(ctx, path, size, uploadURL, headers)
 		if err == nil {
 			return nil
 		}
@@ -105,14 +114,14 @@ func putFile(path string, size int64, uploadURL string, headers map[string]strin
 	return lastErr
 }
 
-func putFileOnce(path string, size int64, uploadURL string, headers map[string]string) (bool, error) {
+func putFileOnce(ctx context.Context, path string, size int64, uploadURL string, headers map[string]string) (bool, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return false, err
 	}
 	defer func() { _ = file.Close() }()
 
-	req, err := http.NewRequest(http.MethodPut, uploadURL, file)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadURL, file)
 	if err != nil {
 		return false, err
 	}
@@ -121,14 +130,15 @@ func putFileOnce(path string, size int64, uploadURL string, headers map[string]s
 		req.Header.Set(name, value)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := uploadClient.Do(req)
 	if err != nil {
-		return true, fmt.Errorf("Could not upload the file: %w", err)
+		return ctx.Err() == nil, fmt.Errorf("Could not upload the file: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
-		return resp.StatusCode >= 500, fmt.Errorf("Upload to storage failed with status %d", resp.StatusCode)
+		retry := resp.StatusCode >= 500 || resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusRequestTimeout
+		return retry, fmt.Errorf("Upload to storage failed with status %d", resp.StatusCode)
 	}
 	return false, nil
 }
