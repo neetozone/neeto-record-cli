@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
+	json "encoding/json/v2"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neetozone/neeto-cli-commons/output"
+	"github.com/neetozone/neeto-cli-commons/v2/output"
 	"github.com/spf13/cobra"
 )
 

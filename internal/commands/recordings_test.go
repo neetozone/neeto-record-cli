@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/neetozone/neeto-cli-commons/auth"
-	"github.com/neetozone/neeto-cli-commons/cli"
-	"github.com/neetozone/neeto-cli-commons/config"
+	"github.com/neetozone/neeto-cli-commons/v2/auth"
+	"github.com/neetozone/neeto-cli-commons/v2/cli"
+	"github.com/neetozone/neeto-cli-commons/v2/config"
 	product "github.com/neetozone/neeto-record-cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
