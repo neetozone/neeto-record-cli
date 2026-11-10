@@ -2,18 +2,20 @@ package commands
 
 import (
 	"bytes"
+	json "encoding/json/v2"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/neetozone/neeto-cli-commons/auth"
-	"github.com/neetozone/neeto-cli-commons/cli"
-	"github.com/neetozone/neeto-cli-commons/config"
+	"github.com/neetozone/neeto-cli-commons/v2/auth"
+	"github.com/neetozone/neeto-cli-commons/v2/cli"
+	"github.com/neetozone/neeto-cli-commons/v2/config"
 	product "github.com/neetozone/neeto-record-cli"
 )
 
@@ -90,8 +92,12 @@ func TestRecordingsUploadCreatesPutsAndCompletes(t *testing.T) {
 	if got := strings.Join(calls, "|"); got != wantCalls {
 		t.Errorf("calls = %q, want %q", got, wantCalls)
 	}
-	if want := `{"file_size":11,"folder_id":"fld_1","title":"Demo"}`; strings.TrimSpace(createBody) != want {
-		t.Errorf("create body = %q, want %q", createBody, want)
+	var gotCreate map[string]any
+	if err := json.Unmarshal([]byte(createBody), &gotCreate); err != nil {
+		t.Fatalf("create body %q is not JSON: %v", createBody, err)
+	}
+	if wantCreate := map[string]any{"file_size": 11.0, "folder_id": "fld_1", "title": "Demo"}; !reflect.DeepEqual(gotCreate, wantCreate) {
+		t.Errorf("create body = %v, want %v", gotCreate, wantCreate)
 	}
 	if putBody != "video-bytes" || putLength != 11 {
 		t.Errorf("PUT body = %q length %d, want video-bytes length 11", putBody, putLength)
